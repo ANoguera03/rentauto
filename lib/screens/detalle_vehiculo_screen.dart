@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/vehiculo.dart';
 import 'dart:io';
+import 'package:provider/provider.dart';
+import '../providers/licencia_provider.dart';
+import 'validar_licencia_screen.dart';
 
 class DetalleVehiculoScreen extends StatelessWidget {
   final Vehiculo vehiculo;
@@ -81,8 +84,10 @@ class DetalleVehiculoScreen extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Aquí seguirá la validación de licencia con IA')),
+                        context.read<LicenciaProvider>().reiniciar();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const ValidarLicenciaScreen()),
                         );
                       },
                       icon: const Icon(Icons.key),
