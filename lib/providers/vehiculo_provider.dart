@@ -11,6 +11,7 @@ class VehiculoProvider extends ChangeNotifier {
   List<Vehiculo> _vehiculos = [];
   bool cargando = false;
   String rolActual = 'cliente'; // 'cliente' o 'dueño'
+  String nombreUsuario = 'Usuario';
 
 
   List<Vehiculo> get vehiculos => _vehiculos;

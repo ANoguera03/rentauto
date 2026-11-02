@@ -87,7 +87,7 @@ class DetalleVehiculoScreen extends StatelessWidget {
                         context.read<LicenciaProvider>().reiniciar();
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const ValidarLicenciaScreen()),
+                          MaterialPageRoute(builder: (_) => ValidarLicenciaScreen(vehiculo: vehiculo)),
                         );
                       },
                       icon: const Icon(Icons.key),

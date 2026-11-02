@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../providers/licencia_provider.dart';
+import '../models/vehiculo.dart';
+import 'reservar_screen.dart';
 
 class ValidarLicenciaScreen extends StatelessWidget {
-  const ValidarLicenciaScreen({super.key});
+  final Vehiculo vehiculo;
+  const ValidarLicenciaScreen({super.key, required this.vehiculo});
 
   Future<void> _elegir(BuildContext context, ImageSource fuente) async {
     final picked = await ImagePicker().pickImage(
@@ -196,11 +199,13 @@ class ValidarLicenciaScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: aprobada
-                    ? () => ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Licencia verificada. Aquí seguirá la reserva.')),
-                        )
-                    : null,
+    ? () => Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ReservarScreen(vehiculo: vehiculo),
+          ),
+        )
+    : null,
                 child: const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
                   child: Text('Continuar con la reserva'),

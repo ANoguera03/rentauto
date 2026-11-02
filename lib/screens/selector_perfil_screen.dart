@@ -291,11 +291,13 @@ class _SelectorPerfilScreenState extends State<SelectorPerfilScreen> {
   }
 
   void _entrar(BuildContext context, String rol) {
-    // Mantengo tu lógica intacta
-    context.read<VehiculoProvider>().rolActual = rol;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const BuscarVehiculosScreen()),
-    );
-  }
+  final provider = context.read<VehiculoProvider>();
+  provider.rolActual = rol;
+  final nombre = _nombreController.text.trim();
+  provider.nombreUsuario = nombre.isEmpty ? 'Usuario' : nombre;
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (_) => const BuscarVehiculosScreen()),
+  );
+}
 }

@@ -5,6 +5,7 @@ import 'screens/selector_perfil_screen.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'providers/licencia_provider.dart';
+import 'providers/reserva_provider.dart';
 
 Future<void> main() async {
   await dotenv.load(fileName: '.env');
@@ -23,6 +24,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => VehiculoProvider()),
         ChangeNotifierProvider(create: (_) => VehiculoProvider()),
         ChangeNotifierProvider(create: (_) => LicenciaProvider()),
+        ChangeNotifierProvider(create: (_) => ReservaProvider()),
       ],
       child: MaterialApp(
         title: 'RentAuto',
