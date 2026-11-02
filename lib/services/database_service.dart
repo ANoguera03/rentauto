@@ -20,15 +20,22 @@ class DatabaseService {
     String path = join(await getDatabasesPath(), 'rentauto.db');
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await _crearTablaVehiculos(db);
         await _crearTablaReservas(db);
       },
-      // Migración: quien ya tenía la app instalada recibe la tabla nueva sin perder sus vehículos
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
-          await _crearTablaReservas(db);
+          await _crearTablaReservas(db); // ya incluye la columna 'dueno'
+        }
+        if (oldVersion < 3) {
+          await db.execute(
+              "ALTER TABLE vehiculos ADD COLUMN dueno TEXT NOT NULL DEFAULT ''");
+          if (oldVersion >= 2) {
+            await db.execute(
+                "ALTER TABLE reservas ADD COLUMN dueno TEXT NOT NULL DEFAULT ''");
+          }
         }
       },
     );
@@ -45,7 +52,8 @@ class DatabaseService {
         tipo TEXT NOT NULL,
         ubicacion TEXT NOT NULL,
         fotoPath TEXT,
-        disponible INTEGER NOT NULL
+        disponible INTEGER NOT NULL,
+        dueno TEXT NOT NULL DEFAULT ''
       )
     ''');
   }
@@ -57,6 +65,7 @@ class DatabaseService {
         vehiculoId INTEGER NOT NULL,
         vehiculoNombre TEXT NOT NULL,
         cliente TEXT NOT NULL,
+        dueno TEXT NOT NULL DEFAULT '',
         fechaInicio TEXT NOT NULL,
         fechaFin TEXT NOT NULL,
         total REAL NOT NULL,
@@ -106,8 +115,6 @@ class DatabaseService {
         where: 'id = ?', whereArgs: [id]);
   }
 
-  // Dos rangos se cruzan si cada uno empieza antes de que termine el otro.
-  // Las reservas rechazadas o finalizadas no bloquean el vehículo.
   Future<bool> hayCruce(int vehiculoId, DateTime inicio, DateTime fin) async {
     final db = await database;
     final resultado = await db.rawQuery('''

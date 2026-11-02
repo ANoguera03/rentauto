@@ -6,8 +6,9 @@ class Vehiculo {
   final double precioPorDia;
   final String tipo; // "carro", "moto", "camioneta"
   final String ubicacion;
-  final String? fotoPath; // ruta local de la foto
+  final String? fotoPath;
   final bool disponible;
+  final String dueno; // nombre del usuario que lo publicó
 
   Vehiculo({
     this.id,
@@ -19,9 +20,9 @@ class Vehiculo {
     required this.ubicacion,
     this.fotoPath,
     this.disponible = true,
+    this.dueno = '',
   });
 
-  // Convierte el objeto Vehiculo a un Map (lo que sqflite necesita para guardar)
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -32,11 +33,11 @@ class Vehiculo {
       'tipo': tipo,
       'ubicacion': ubicacion,
       'fotoPath': fotoPath,
-      'disponible': disponible ? 1 : 0, // SQLite no tiene booleanos, usa 0/1
+      'disponible': disponible ? 1 : 0,
+      'dueno': dueno,
     };
   }
 
-  // Convierte un Map (lo que viene de sqflite) de vuelta a un objeto Vehiculo
   factory Vehiculo.fromMap(Map<String, dynamic> map) {
     return Vehiculo(
       id: map['id'],
@@ -48,6 +49,7 @@ class Vehiculo {
       ubicacion: map['ubicacion'],
       fotoPath: map['fotoPath'],
       disponible: map['disponible'] == 1,
+      dueno: map['dueno'] ?? '',
     );
   }
 }

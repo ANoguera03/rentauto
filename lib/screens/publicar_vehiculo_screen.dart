@@ -129,6 +129,7 @@ class _PublicarVehiculoScreenState extends State<PublicarVehiculoScreen> {
       tipo: _tipoSeleccionado,
       ubicacion: _ubicacionController.text.isEmpty ? 'Pasto' : _ubicacionController.text,
       fotoPath: _imagenSeleccionada?.path, // <-- esto es lo nuevo
+      dueno: context.read<VehiculoProvider>().nombreUsuario,
     );
 
     

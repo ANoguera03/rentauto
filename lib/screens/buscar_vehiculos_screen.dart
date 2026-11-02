@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../providers/vehiculo_provider.dart';
 import 'publicar_vehiculo_screen.dart';
 import 'detalle_vehiculo_screen.dart';
+import 'mis_reservas_screen.dart';
+import 'selector_perfil_screen.dart';
 import 'dart:io';
 class BuscarVehiculosScreen extends StatefulWidget {
   const BuscarVehiculosScreen({super.key});
@@ -31,6 +33,25 @@ Widget build(BuildContext context) {
       elevation: 0,
       backgroundColor: Theme.of(context).colorScheme.surface,
       foregroundColor: Theme.of(context).colorScheme.onSurface,
+      actions: [
+  IconButton(
+    tooltip: 'Mis reservas',
+    icon: const Icon(Icons.receipt_long_outlined),
+    onPressed: () => Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const MisReservasScreen()),
+    ),
+  ),
+  IconButton(
+    tooltip: 'Cambiar de perfil',
+    icon: const Icon(Icons.switch_account_outlined),
+    onPressed: () => Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const SelectorPerfilScreen()),
+      (route) => false,
+    ),
+  ),
+],
     ),
     body: provider.cargando
         ? const Center(child: CircularProgressIndicator())

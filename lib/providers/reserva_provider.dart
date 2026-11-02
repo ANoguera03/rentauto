@@ -43,6 +43,7 @@ class ReservaProvider extends ChangeNotifier {
         vehiculoId: vehiculo.id!,
         vehiculoNombre: '${vehiculo.marca} ${vehiculo.modelo}',
         cliente: cliente,
+        dueno: vehiculo.dueno,
         fechaInicio: ini,
         fechaFin: f,
         total: dias * vehiculo.precioPorDia,

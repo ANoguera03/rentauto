@@ -3,6 +3,7 @@ class Reserva {
   final int vehiculoId;
   final String vehiculoNombre;
   final String cliente;
+  final String dueno;
   final DateTime fechaInicio;
   final DateTime fechaFin;
   final double total;
@@ -13,13 +14,13 @@ class Reserva {
     required this.vehiculoId,
     required this.vehiculoNombre,
     required this.cliente,
+    required this.dueno,
     required this.fechaInicio,
     required this.fechaFin,
     required this.total,
     this.estado = 'solicitada',
   });
 
-  // Las fechas se guardan como texto "aaaa-mm-dd" (así se pueden comparar en SQL)
   static String fechaATexto(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
@@ -31,6 +32,7 @@ class Reserva {
       'vehiculoId': vehiculoId,
       'vehiculoNombre': vehiculoNombre,
       'cliente': cliente,
+      'dueno': dueno,
       'fechaInicio': fechaATexto(fechaInicio),
       'fechaFin': fechaATexto(fechaFin),
       'total': total,
@@ -44,6 +46,7 @@ class Reserva {
       vehiculoId: map['vehiculoId'],
       vehiculoNombre: map['vehiculoNombre'],
       cliente: map['cliente'],
+      dueno: map['dueno'] ?? '',
       fechaInicio: DateTime.parse(map['fechaInicio']),
       fechaFin: DateTime.parse(map['fechaFin']),
       total: map['total'],
