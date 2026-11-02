@@ -18,12 +18,19 @@ class AIService {
   static const String _modeloPrincipal = 'gemini-flash-latest';
   static const String _modeloRespaldo = 'gemini-flash-lite-latest';
 
-  static const String _prompt = '''
-Analiza esta imagen. Debe ser una licencia de conducción colombiana.
-Extrae los datos y responde SOLO con un JSON válido, sin texto adicional,
-con exactamente este formato:
+    static const String _prompt = '''
+Analiza esta imagen. Debe ser una licencia de conducción colombiana (puede ser el frente o el reverso, y la foto puede estar girada).
+
+Extrae los datos y responde SOLO con un JSON válido, sin texto adicional, con exactamente este formato:
 {"nombre": "...", "categoria": "...", "fecha_vencimiento": "dd/mm/aaaa", "legible": true}
-Si la imagen no es una licencia o no se puede leer, responde:
+
+Reglas:
+- Escribe la fecha SIEMPRE con barras en formato dd/mm/aaaa, aunque en el documento aparezca con guiones o puntos.
+- Si hay varias categorías con distintas fechas de vigencia, devuelve la categoría y la fecha de la primera fila de la tabla.
+- Si un dato no aparece en la imagen (por ejemplo el nombre en el reverso), déjalo como cadena vacía "".
+- No inventes datos: si no estás seguro de un valor, déjalo vacío.
+
+Si la imagen no es una licencia de conducción o no se puede leer, responde exactamente:
 {"nombre": "", "categoria": "", "fecha_vencimiento": "", "legible": false}
 ''';
 

@@ -1,7 +1,7 @@
 class ResultadoLicencia {
   final String nombre;
   final String categoria;
-  final String fechaVencimiento; // formato dd/mm/aaaa
+  final String fechaVencimiento;
   final bool legible;
 
   ResultadoLicencia({
@@ -20,18 +20,30 @@ class ResultadoLicencia {
     );
   }
 
-  // La vigencia la calcula TU código, no la IA
+  // Acepta 27/02/2035, 27-02-2035 y 27.02.2035
+  DateTime? get fechaVencimientoDate {
+    final partes = fechaVencimiento.trim().split(RegExp(r'[\/\-\.\s]+'));
+    if (partes.length != 3) return null;
+
+    final dia = int.tryParse(partes[0]);
+    final mes = int.tryParse(partes[1]);
+    final anio = int.tryParse(partes[2]);
+
+    if (dia == null || mes == null || anio == null) return null;
+    if (mes < 1 || mes > 12 || dia < 1 || dia > 31) return null;
+
+    return DateTime(anio, mes, dia);
+  }
+
+  bool get fechaInterpretable => fechaVencimientoDate != null;
+
+  // La vigencia la decide el código, no la IA
   bool get vigente {
-    try {
-      final partes = fechaVencimiento.split('/');
-      final fecha = DateTime(
-        int.parse(partes[2]),
-        int.parse(partes[1]),
-        int.parse(partes[0]),
-      );
-      return fecha.isAfter(DateTime.now());
-    } catch (_) {
-      return false;
-    }
+    final fecha = fechaVencimientoDate;
+    if (fecha == null) return false;
+
+    final hoy = DateTime.now();
+    final hoySinHora = DateTime(hoy.year, hoy.month, hoy.day);
+    return !fecha.isBefore(hoySinHora); // el último día de vigencia aún cuenta
   }
 }

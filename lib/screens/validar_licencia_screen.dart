@@ -151,11 +151,12 @@ class ValidarLicenciaScreen extends StatelessWidget {
 
       case EstadoValidacion.exito:
         final r = p.resultado!;
-        if (!r.legible) {
+        if (!r.fechaInterpretable) {
           return _tarjeta(
             color: Colors.orange.shade50,
-            child: const Text(
-              'No pudimos leer una licencia en esa imagen. Intenta con una foto más clara y bien iluminada.',
+            child: Text(
+              'Pudimos leer el documento, pero no la fecha de vigencia ("${r.fechaVencimiento}"). '
+              'Intenta con una foto donde se vea claramente.',
             ),
           );
         }
