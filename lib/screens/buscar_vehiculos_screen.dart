@@ -5,6 +5,7 @@ import 'publicar_vehiculo_screen.dart';
 import 'detalle_vehiculo_screen.dart';
 import 'mis_reservas_screen.dart';
 import 'selector_perfil_screen.dart';
+import 'perfil_screen.dart';
 import 'dart:io';
 class BuscarVehiculosScreen extends StatefulWidget {
   const BuscarVehiculosScreen({super.key});
@@ -51,6 +52,14 @@ Widget build(BuildContext context) {
       (route) => false,
     ),
   ),
+  IconButton(
+  tooltip: 'Mi perfil',
+  icon: const Icon(Icons.person_outline),
+  onPressed: () => Navigator.push(
+    context,
+    MaterialPageRoute(builder: (_) => const PerfilScreen()),
+  ),
+),
 ],
     ),
     body: provider.cargando

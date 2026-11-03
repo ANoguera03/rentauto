@@ -175,6 +175,9 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.primary)),
+                    if (r.calificacion != null) _estrellasYComentario(r),
+          if (!_comoDueno && r.estado == 'finalizada' && r.calificacion == null)
+            _botonUnico('Calificar experiencia', () => _calificar(context, r)),
           if (_comoDueno) _acciones(context, r),
         ],
       ),
@@ -214,6 +217,97 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
       default:
         return const SizedBox.shrink();
     }
+  }
+
+    Widget _estrellasYComentario(Reserva r) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: List.generate(
+              5,
+              (i) => Icon(
+                i < r.calificacion! ? Icons.star : Icons.star_border,
+                size: 18,
+                color: Colors.amber.shade700,
+              ),
+            ),
+          ),
+          if (r.comentario != null && r.comentario!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text('"${r.comentario}"',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _calificar(BuildContext context, Reserva r) async {
+    final provider = context.read<ReservaProvider>();
+    int estrellas = 5;
+    final comentarioCtrl = TextEditingController();
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.fromLTRB(
+            20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
+        child: StatefulBuilder(
+          builder: (ctx, setModal) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('¿Cómo fue tu experiencia?',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  5,
+                  (i) => IconButton(
+                    onPressed: () => setModal(() => estrellas = i + 1),
+                    icon: Icon(
+                      i < estrellas ? Icons.star : Icons.star_border,
+                      color: Colors.amber.shade700,
+                      size: 38,
+                    ),
+                  ),
+                ),
+              ),
+              TextField(
+                controller: comentarioCtrl,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'Comentario (opcional)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    await provider.calificar(r.id!, estrellas, comentarioCtrl.text);
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Text('Enviar calificación'),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _botonUnico(String texto, VoidCallback onPressed) {

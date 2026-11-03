@@ -20,14 +20,15 @@ class DatabaseService {
     String path = join(await getDatabasesPath(), 'rentauto.db');
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: (db, version) async {
         await _crearTablaVehiculos(db);
         await _crearTablaReservas(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
-          await _crearTablaReservas(db); // ya incluye la columna 'dueno'
+          // la tabla nueva ya trae 'dueno', 'calificacion' y 'comentario'
+          await _crearTablaReservas(db);
         }
         if (oldVersion < 3) {
           await db.execute(
@@ -36,6 +37,10 @@ class DatabaseService {
             await db.execute(
                 "ALTER TABLE reservas ADD COLUMN dueno TEXT NOT NULL DEFAULT ''");
           }
+        }
+        if (oldVersion >= 2 && oldVersion < 4) {
+          await db.execute('ALTER TABLE reservas ADD COLUMN calificacion INTEGER');
+          await db.execute('ALTER TABLE reservas ADD COLUMN comentario TEXT');
         }
       },
     );
@@ -69,7 +74,9 @@ class DatabaseService {
         fechaInicio TEXT NOT NULL,
         fechaFin TEXT NOT NULL,
         total REAL NOT NULL,
-        estado TEXT NOT NULL
+        estado TEXT NOT NULL,
+        calificacion INTEGER,
+        comentario TEXT
       )
     ''');
   }
@@ -113,6 +120,16 @@ class DatabaseService {
     final db = await database;
     return await db.update('reservas', {'estado': estado},
         where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<int> calificarReserva(int id, int estrellas, String comentario) async {
+    final db = await database;
+    return await db.update(
+      'reservas',
+      {'calificacion': estrellas, 'comentario': comentario},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   Future<bool> hayCruce(int vehiculoId, DateTime inicio, DateTime fin) async {

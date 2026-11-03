@@ -18,20 +18,22 @@ class AIService {
   static const String _modeloPrincipal = 'gemini-flash-latest';
   static const String _modeloRespaldo = 'gemini-flash-lite-latest';
 
-    static const String _prompt = '''
-Analiza esta imagen. Debe ser una licencia de conducción colombiana (puede ser el frente o el reverso, y la foto puede estar girada).
+      static const String _prompt = '''
+Analiza esta imagen. Debe ser una licencia de conducción colombiana. La cara que importa es normalmente el reverso, donde aparece la tabla "CATEGORÍAS AUTORIZADAS" con una fila por categoría. La foto puede estar girada.
 
-Extrae los datos y responde SOLO con un JSON válido, sin texto adicional, con exactamente este formato:
-{"nombre": "...", "categoria": "...", "fecha_vencimiento": "dd/mm/aaaa", "legible": true}
+Responde SOLO con un JSON válido, sin texto adicional, con exactamente este formato:
+{"nombre": "...", "categorias": [{"categoria": "A2", "fecha_vencimiento": "dd/mm/aaaa", "servicio": "PARTICULAR"}], "legible": true}
 
 Reglas:
-- Escribe la fecha SIEMPRE con barras en formato dd/mm/aaaa, aunque en el documento aparezca con guiones o puntos.
-- Si hay varias categorías con distintas fechas de vigencia, devuelve la categoría y la fecha de la primera fila de la tabla.
-- Si un dato no aparece en la imagen (por ejemplo el nombre en el reverso), déjalo como cadena vacía "".
+- Incluye UNA entrada en "categorias" por cada fila de la tabla, cada una con su propia fecha de vigencia.
+- En "categoria" escribe solo el código (A1, A2, B1, B2, B3, C1, C2, C3).
+- Escribe las fechas SIEMPRE con barras en formato dd/mm/aaaa, aunque en el documento aparezcan con guiones o puntos.
+- Si la imagen no muestra la tabla de categorías, devuelve "categorias": [].
+- Si un dato no aparece (por ejemplo el nombre en el reverso), déjalo como cadena vacía "".
 - No inventes datos: si no estás seguro de un valor, déjalo vacío.
 
 Si la imagen no es una licencia de conducción o no se puede leer, responde exactamente:
-{"nombre": "", "categoria": "", "fecha_vencimiento": "", "legible": false}
+{"nombre": "", "categorias": [], "legible": false}
 ''';
 
   Future<ResultadoLicencia> analizarLicencia(File imagen) async {

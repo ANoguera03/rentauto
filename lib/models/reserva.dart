@@ -8,6 +8,8 @@ class Reserva {
   final DateTime fechaFin;
   final double total;
   final String estado; // solicitada, aceptada, rechazada, en_curso, finalizada
+  final int? calificacion; // 1 a 5, null si aún no se califica
+  final String? comentario;
 
   Reserva({
     this.id,
@@ -19,6 +21,8 @@ class Reserva {
     required this.fechaFin,
     required this.total,
     this.estado = 'solicitada',
+    this.calificacion,
+    this.comentario,
   });
 
   static String fechaATexto(DateTime d) =>
@@ -37,6 +41,8 @@ class Reserva {
       'fechaFin': fechaATexto(fechaFin),
       'total': total,
       'estado': estado,
+      'calificacion': calificacion,
+      'comentario': comentario,
     };
   }
 
@@ -51,6 +57,8 @@ class Reserva {
       fechaFin: DateTime.parse(map['fechaFin']),
       total: map['total'],
       estado: map['estado'],
+      calificacion: map['calificacion'],
+      comentario: map['comentario'],
     );
   }
 }

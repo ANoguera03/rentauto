@@ -62,4 +62,23 @@ class ReservaProvider extends ChangeNotifier {
     await _db.actualizarEstadoReserva(id, nuevoEstado);
     await cargarReservas();
   }
+
+  Future<void> calificar(int id, int estrellas, String comentario) async {
+    await _db.calificarReserva(id, estrellas, comentario.trim());
+    await cargarReservas();
+  }
+
+  // Calificaciones que ha recibido un dueño
+  List<Reserva> calificacionesRecibidas(String dueno) {
+    return _reservas
+        .where((r) => r.dueno == dueno && r.calificacion != null)
+        .toList();
+  }
+
+  double? promedioRecibido(String dueno) {
+    final lista = calificacionesRecibidas(dueno);
+    if (lista.isEmpty) return null;
+    final suma = lista.map((r) => r.calificacion!).reduce((a, b) => a + b);
+    return suma / lista.length;
+  }
 }
