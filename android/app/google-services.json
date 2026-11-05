@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "542079960233",
+    "project_id": "rentauto-5e048",
+    "storage_bucket": "rentauto-5e048.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:542079960233:android:55a561b26459b302b755b8",
+        "android_client_info": {
+          "package_name": "com.example.rentauto"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSpcPAWiyvhE0zeNlB1CvnvOLmazk78fM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
