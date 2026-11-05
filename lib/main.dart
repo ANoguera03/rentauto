@@ -7,7 +7,7 @@ import 'providers/licencia_provider.dart';
 import 'providers/reserva_provider.dart';
 import 'providers/vehiculo_provider.dart';
 import 'repositories/data_repository.dart';
-import 'screens/selector_perfil_screen.dart';
+import 'screens/auth_gate.dart';
 import 'services/database_service.dart';
 
 // Único lugar donde se decide qué base de datos usa la app.
@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
           colorSchemeSeed: const Color(0xFF0E8A72),
           useMaterial3: true,
         ),
-        home: const SelectorPerfilScreen(),
+                home: const AuthGate(),
       ),
     );
   }

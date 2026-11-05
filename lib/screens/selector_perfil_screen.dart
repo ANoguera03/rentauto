@@ -1,303 +1,95 @@
-// import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
-// import '../providers/vehiculo_provider.dart';
-// import 'buscar_vehiculos_screen.dart';
-
-// class SelectorPerfilScreen extends StatefulWidget {
-//   const SelectorPerfilScreen({super.key});
-
-//   @override
-//   State<SelectorPerfilScreen> createState() => _SelectorPerfilScreenState();
-// }
-
-// class _SelectorPerfilScreenState extends State<SelectorPerfilScreen> {
-//   final _nombreController = TextEditingController();
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       body: SafeArea(
-//         child: Padding(
-//           padding: const EdgeInsets.all(24),
-//           child: Column(
-//             mainAxisAlignment: MainAxisAlignment.center,
-//             children: [
-//               const Icon(Icons.directions_car, size: 60, color: Color(0xFF0E8A72)),
-//               const SizedBox(height: 12),
-//               const Text('RentAuto', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-//               const SizedBox(height: 24),
-//               TextField(
-//                 controller: _nombreController,
-//                 decoration: const InputDecoration(
-//                   labelText: 'Tu nombre',
-//                   border: OutlineInputBorder(),
-//                 ),
-//               ),
-//               const SizedBox(height: 20),
-//               SizedBox(
-//                 width: double.infinity,
-//                 child: ElevatedButton(
-//                   onPressed: () => _entrar(context, 'cliente'),
-//                   child: const Padding(
-//                     padding: EdgeInsets.symmetric(vertical: 12),
-//                     child: Text('Entrar como cliente'),
-//                   ),
-//                 ),
-//               ),
-//               const SizedBox(height: 10),
-//               SizedBox(
-//                 width: double.infinity,
-//                 child: OutlinedButton(
-//                   onPressed: () => _entrar(context, 'dueño'),
-//                   child: const Padding(
-//                     padding: EdgeInsets.symmetric(vertical: 12),
-//                     child: Text('Entrar como dueño'),
-//                   ),
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-
-//   void _entrar(BuildContext context, String rol) {
-//     context.read<VehiculoProvider>().rolActual = rol;
-//     Navigator.pushReplacement(
-//       context,
-//       MaterialPageRoute(builder: (_) => const BuscarVehiculosScreen()),
-//     );
-//   }
-// }
-
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../providers/licencia_provider.dart';
 import '../providers/vehiculo_provider.dart';
 import 'buscar_vehiculos_screen.dart';
 
-// Definición de colores profesionales
-class AppColors {
-  static const Color primaryBlue = Color(0xFF1E3A8A); // Azul intenso profesional
-  static const Color secondaryBlue = Color(0xFF007BFF); // Azul más brillante para destaques
-  static const Color backgroundLight = Color(0xFFF8F9FA); // Gris muy claro para fondo
-  static const Color textDark = Color(0xFF333333); // Gris oscuro para texto principal
-  static const Color textLight = Color(0xFFFFFFFF); // Blanco para texto en botones oscuros
-  static const Color borderGray = Color(0xFFE0E0E0); // Gris medio para bordes sutiles
-}
+class SelectorPerfilScreen extends StatelessWidget {
+  final User usuario;
+  const SelectorPerfilScreen({super.key, required this.usuario});
 
-class SelectorPerfilScreen extends StatefulWidget {
-  const SelectorPerfilScreen({super.key});
+  String get _nombre {
+    final n = usuario.displayName?.trim() ?? '';
+    return n.isNotEmpty ? n : (usuario.email ?? 'Usuario');
+  }
 
-  @override
-  State<SelectorPerfilScreen> createState() => _SelectorPerfilScreenState();
-}
+  void _entrar(BuildContext context, String rol) {
+    final vehiculos = context.read<VehiculoProvider>();
+    vehiculos.rolActual = rol;
+    vehiculos.uid = usuario.uid;
+    vehiculos.nombreUsuario = _nombre;
 
-class _SelectorPerfilScreenState extends State<SelectorPerfilScreen> {
-  final _nombreController = TextEditingController();
+    // La licencia guardada se asocia al id de la cuenta, no al nombre
+    context.read<LicenciaProvider>().cambiarUsuario(usuario.uid);
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const BuscarVehiculosScreen()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Definimos el estilo de texto global para esta pantalla
-    final textTheme = Theme.of(context).textTheme;
+    final primary = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // --- Nuevo Logotipo RentAuto Profesional ---
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.textLight,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.borderGray,
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  color: primary.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.location_on, // Un icono que combina ubicación/viaje
-                      size: 48,
-                      color: AppColors.secondaryBlue,
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(
-                      Icons.directions_car, // El icono de coche
-                      size: 56,
-                      color: AppColors.primaryBlue,
-                    ),
-                  ],
-                ),
+                child: Icon(Icons.directions_car, size: 44, color: primary),
               ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Rent',
-                    style: textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryBlue,
-                      fontSize: 32,
-                    ),
-                  ),
-                  Text(
-                    'Auto',
-                    style: textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.secondaryBlue,
-                      fontSize: 32,
-                    ),
-                  ),
-                ],
-              ),
-              // const Text(
-              //   'Tu viaje, tu coche.', // Slogan opcional
-              //   style: TextStyle(color: AppColors.textDark, fontSize: 14),
-              // ),
-              const SizedBox(height: 56),
-
-              // --- Encabezado de Bienvenida ---
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  '¡Bienvenido a RentAuto!',
-                  style: textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textDark,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Introduce tu nombre y selecciona tu perfil para comenzar.',
-                  style: textTheme.titleMedium?.copyWith(
-                    color: AppColors.textDark.withOpacity(0.8),
-                    fontWeight: FontWeight.normal,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 48),
-
-              // --- Campo de Texto del Nombre ---
-              TextField(
-                controller: _nombreController,
-                style: const TextStyle(fontSize: 18),
-                decoration: InputDecoration(
-                  labelText: 'Tu nombre completo',
-                  labelStyle: const TextStyle(color: AppColors.primaryBlue, fontSize: 16),
-                  hintText: 'Ej. Juan Pérez',
-                  prefixIcon: const Icon(Icons.person, color: AppColors.secondaryBlue, size: 28,),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: AppColors.borderGray),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: AppColors.borderGray),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: AppColors.secondaryBlue, width: 2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 40),
-
-              // --- Botones de Selección de Perfil ---
-              // Botón Principal: Cliente
+              const SizedBox(height: 14),
+              const Text('RentAuto',
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 6),
+              Text('Hola, $_nombre',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 4),
+              Text('¿Cómo quieres usar la app hoy?',
+                  style: TextStyle(color: Colors.grey[600])),
+              const SizedBox(height: 28),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () => _entrar(context, 'cliente'),
-                  icon: const Icon(Icons.shopping_bag, size: 28),
+                  icon: const Icon(Icons.search),
                   label: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
-                    child: Text(
-                      'Entrar como Cliente',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textLight,
-                      ),
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryBlue,
-                    foregroundColor: AppColors.textLight,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 4,
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    child: Text('Buscar y alquilar vehículos'),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-
-              // Botón Secundario: Dueño
+              const SizedBox(height: 10),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: () => _entrar(context, 'dueño'),
-                  icon: const Icon(Icons.business_center, size: 28, color: AppColors.secondaryBlue),
+                  icon: const Icon(Icons.key_outlined),
                   label: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
-                    child: Text(
-                      'Entrar como Dueño de Vehículo',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.secondaryBlue,
-                      ),
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: AppColors.textLight,
-                    side: const BorderSide(color: AppColors.secondaryBlue, width: 2),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 0,
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    child: Text('Publicar mis vehículos'),
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // --- Texto de ayuda opcional ---
-              // Text(
-              //   '¿Necesitas ayuda? Contáctanos.',
-              //   style: textTheme.bodySmall?.copyWith(color: AppColors.textDark.withOpacity(0.6)),
-              // )
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => FirebaseAuth.instance.signOut(),
+                child: const Text('Cerrar sesión'),
+              ),
             ],
           ),
         ),
       ),
     );
   }
-
-  void _entrar(BuildContext context, String rol) {
-  final provider = context.read<VehiculoProvider>();
-  provider.rolActual = rol;
-  final nombre = _nombreController.text.trim();
-  provider.nombreUsuario = nombre.isEmpty ? 'Usuario' : nombre;
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (_) => const BuscarVehiculosScreen()),
-  );
-}
 }

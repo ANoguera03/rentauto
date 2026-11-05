@@ -10,6 +10,7 @@ class VehiculoProvider extends ChangeNotifier {
   bool cargando = false;
   String rolActual = 'cliente'; // 'cliente' o 'dueño'
   String nombreUsuario = 'Usuario';
+  String uid = '';
 
   List<Vehiculo> get vehiculos => _vehiculos;
 

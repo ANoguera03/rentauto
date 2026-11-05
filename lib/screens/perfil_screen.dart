@@ -4,6 +4,8 @@ import '../providers/licencia_provider.dart';
 import '../providers/reserva_provider.dart';
 import '../providers/vehiculo_provider.dart';
 import '../models/resultado_licencia.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'auth_gate.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
@@ -39,7 +41,26 @@ class _PerfilScreenState extends State<PerfilScreen> {
     final opiniones = reservas.calificacionesRecibidas(nombre);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mi perfil'), centerTitle: true),
+            appBar: AppBar(
+        title: const Text('Mi perfil'),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            tooltip: 'Cerrar sesión',
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              if (context.mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AuthGate()),
+                  (route) => false,
+                );
+              }
+            },
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [

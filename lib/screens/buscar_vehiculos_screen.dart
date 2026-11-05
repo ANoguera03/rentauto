@@ -4,7 +4,7 @@ import '../providers/vehiculo_provider.dart';
 import 'publicar_vehiculo_screen.dart';
 import 'detalle_vehiculo_screen.dart';
 import 'mis_reservas_screen.dart';
-import 'selector_perfil_screen.dart';
+import 'auth_gate.dart';
 import 'perfil_screen.dart';
 import 'dart:io';
 class BuscarVehiculosScreen extends StatefulWidget {
@@ -48,7 +48,7 @@ Widget build(BuildContext context) {
     icon: const Icon(Icons.switch_account_outlined),
     onPressed: () => Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (_) => const SelectorPerfilScreen()),
+      MaterialPageRoute(builder: (_) => const AuthGate()),
       (route) => false,
     ),
   ),
