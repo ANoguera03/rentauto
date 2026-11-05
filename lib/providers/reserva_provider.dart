@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/reserva.dart';
 import '../models/vehiculo.dart';
-import '../services/database_service.dart';
+import '../repositories/data_repository.dart';
 
 class ReservaProvider extends ChangeNotifier {
-  final DatabaseService _db = DatabaseService();
+  final DataRepository _repo;
+  ReservaProvider(this._repo);
 
   List<Reserva> _reservas = [];
   bool cargando = false;
@@ -15,7 +16,7 @@ class ReservaProvider extends ChangeNotifier {
     cargando = true;
     notifyListeners();
     try {
-      _reservas = await _db.obtenerReservas();
+      _reservas = await _repo.obtenerReservas();
     } catch (e) {
       debugPrint('Error cargando reservas: $e');
     }
@@ -32,24 +33,23 @@ class ReservaProvider extends ChangeNotifier {
   }) async {
     final ini = DateTime(inicio.year, inicio.month, inicio.day);
     final f = DateTime(fin.year, fin.month, fin.day);
+    final dias = f.difference(ini).inDays + 1;
+
+    final reserva = Reserva(
+      vehiculoId: vehiculo.id!,
+      vehiculoNombre: '${vehiculo.marca} ${vehiculo.modelo}',
+      cliente: cliente,
+      dueno: vehiculo.dueno,
+      fechaInicio: ini,
+      fechaFin: f,
+      total: dias * vehiculo.precioPorDia,
+    );
 
     try {
-      if (await _db.hayCruce(vehiculo.id!, ini, f)) {
+      final creada = await _repo.crearReservaSiDisponible(reserva);
+      if (!creada) {
         return 'Ese vehículo ya está reservado en alguna de esas fechas. Elige otro rango.';
       }
-
-      final dias = f.difference(ini).inDays + 1;
-      final reserva = Reserva(
-        vehiculoId: vehiculo.id!,
-        vehiculoNombre: '${vehiculo.marca} ${vehiculo.modelo}',
-        cliente: cliente,
-        dueno: vehiculo.dueno,
-        fechaInicio: ini,
-        fechaFin: f,
-        total: dias * vehiculo.precioPorDia,
-      );
-
-      await _db.insertarReserva(reserva);
       await cargarReservas();
       return null;
     } catch (e) {
@@ -58,13 +58,13 @@ class ReservaProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> cambiarEstado(int id, String nuevoEstado) async {
-    await _db.actualizarEstadoReserva(id, nuevoEstado);
+  Future<void> cambiarEstado(String id, String nuevoEstado) async {
+    await _repo.actualizarEstadoReserva(id, nuevoEstado);
     await cargarReservas();
   }
 
-  Future<void> calificar(int id, int estrellas, String comentario) async {
-    await _db.calificarReserva(id, estrellas, comentario.trim());
+  Future<void> calificar(String id, int estrellas, String comentario) async {
+    await _repo.calificarReserva(id, estrellas, comentario.trim());
     await cargarReservas();
   }
 

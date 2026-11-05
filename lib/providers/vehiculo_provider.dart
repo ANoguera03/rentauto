@@ -1,37 +1,34 @@
 import 'package:flutter/material.dart';
 import '../models/vehiculo.dart';
-import '../services/database_service.dart';
-
-
-
+import '../repositories/data_repository.dart';
 
 class VehiculoProvider extends ChangeNotifier {
-  final DatabaseService _db = DatabaseService();
+  final DataRepository _repo;
+  VehiculoProvider(this._repo);
 
   List<Vehiculo> _vehiculos = [];
   bool cargando = false;
   String rolActual = 'cliente'; // 'cliente' o 'dueño'
   String nombreUsuario = 'Usuario';
 
-
   List<Vehiculo> get vehiculos => _vehiculos;
 
- Future<void> cargarVehiculos() async {
-  cargando = true;
-  notifyListeners();
+  Future<void> cargarVehiculos() async {
+    cargando = true;
+    notifyListeners();
 
-  try {
-    _vehiculos = await _db.obtenerVehiculos();
-  } catch (e) {
-    debugPrint('Error cargando vehículos: $e'); // esto se ve en la terminal
+    try {
+      _vehiculos = await _repo.obtenerVehiculos();
+    } catch (e) {
+      debugPrint('Error cargando vehículos: $e');
+    }
+
+    cargando = false;
+    notifyListeners();
   }
 
-  cargando = false;
-  notifyListeners();
-}
-
   Future<void> agregarVehiculo(Vehiculo vehiculo) async {
-    await _db.insertarVehiculo(vehiculo);
-    await cargarVehiculos(); // recarga la lista para que se vea el nuevo
+    await _repo.insertarVehiculo(vehiculo);
+    await cargarVehiculos();
   }
 }

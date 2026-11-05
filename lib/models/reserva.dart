@@ -1,6 +1,6 @@
 class Reserva {
-  final int? id;
-  final int vehiculoId;
+  final String? id;
+  final String vehiculoId;
   final String vehiculoNombre;
   final String cliente;
   final String dueno;
@@ -48,14 +48,14 @@ class Reserva {
 
   factory Reserva.fromMap(Map<String, dynamic> map) {
     return Reserva(
-      id: map['id'],
-      vehiculoId: map['vehiculoId'],
+      id: map['id']?.toString(),
+      vehiculoId: map['vehiculoId'].toString(),
       vehiculoNombre: map['vehiculoNombre'],
       cliente: map['cliente'],
       dueno: map['dueno'] ?? '',
       fechaInicio: DateTime.parse(map['fechaInicio']),
       fechaFin: DateTime.parse(map['fechaFin']),
-      total: map['total'],
+      total: (map['total'] as num).toDouble(),
       estado: map['estado'],
       calificacion: map['calificacion'],
       comentario: map['comentario'],

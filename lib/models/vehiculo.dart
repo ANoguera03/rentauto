@@ -1,5 +1,5 @@
 class Vehiculo {
-  final int? id;
+  final String? id;
   final String marca;
   final String modelo;
   final int anio;
@@ -40,11 +40,11 @@ class Vehiculo {
 
   factory Vehiculo.fromMap(Map<String, dynamic> map) {
     return Vehiculo(
-      id: map['id'],
+      id: map['id']?.toString(),
       marca: map['marca'],
       modelo: map['modelo'],
       anio: map['anio'],
-      precioPorDia: map['precioPorDia'],
+      precioPorDia: (map['precioPorDia'] as num).toDouble(),
       tipo: map['tipo'],
       ubicacion: map['ubicacion'],
       fotoPath: map['fotoPath'],
