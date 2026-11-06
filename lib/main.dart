@@ -9,10 +9,12 @@ import 'providers/vehiculo_provider.dart';
 import 'repositories/data_repository.dart';
 import 'screens/auth_gate.dart';
 import 'services/database_service.dart';
+import 'repositories/firestore_repository.dart';
 
 // Único lugar donde se decide qué base de datos usa la app.
 // Más adelante aquí se cambiará por la implementación de Firestore.
-final DataRepository repositorio = DatabaseService();
+// Para volver a la versión 100% local, cambiar por: DatabaseService()
+final DataRepository repositorio = FirestoreRepository(DatabaseService());
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../models/vehiculo.dart';
-import 'dart:io';
 import 'package:provider/provider.dart';
+import '../models/vehiculo.dart';
 import '../providers/licencia_provider.dart';
+import '../providers/vehiculo_provider.dart';
+import '../widgets/foto_vehiculo.dart';
 import 'validar_licencia_screen.dart';
 
 class DetalleVehiculoScreen extends StatelessWidget {
@@ -13,6 +14,8 @@ class DetalleVehiculoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+    final uid = context.read<VehiculoProvider>().uid;
+    final esMio = vehiculo.duenoId.isNotEmpty && vehiculo.duenoId == uid;
 
     return Scaffold(
       appBar: AppBar(title: Text('${vehiculo.marca} ${vehiculo.modelo}')),
@@ -20,24 +23,7 @@ class DetalleVehiculoScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // "Foto" grande (placeholder, luego la cambiamos por la real)
-            vehiculo.fotoPath != null
-    ? Image.file(
-        File(vehiculo.fotoPath!),
-        height: 220,
-        width: double.infinity,
-        fit: BoxFit.cover,
-      )
-    : Container(
-        height: 220,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [primary.withOpacity(0.15), primary.withOpacity(0.05)],
-          ),
-        ),
-        child: Icon(Icons.directions_car, size: 90, color: primary),
-      ),
+            FotoVehiculo(vehiculo: vehiculo, height: 220, iconSize: 90),
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -52,10 +38,12 @@ class DetalleVehiculoScreen extends StatelessWidget {
                     children: [
                       Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
                       const SizedBox(width: 4),
-                      Text(vehiculo.ubicacion, style: TextStyle(color: Colors.grey[600])),
+                      Text(vehiculo.ubicacion,
+                          style: TextStyle(color: Colors.grey[600])),
                       const SizedBox(width: 10),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.primaryContainer,
                           borderRadius: BorderRadius.circular(20),
@@ -64,39 +52,69 @@ class DetalleVehiculoScreen extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (vehiculo.dueno.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.person_outline, size: 16, color: Colors.grey[600]),
+                        const SizedBox(width: 4),
+                        Text('Publicado por ${vehiculo.dueno}',
+                            style: TextStyle(color: Colors.grey[600])),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   Text(
                     '\$${vehiculo.precioPorDia.toStringAsFixed(0)} / día',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: primary),
+                    style: TextStyle(
+                        fontSize: 22, fontWeight: FontWeight.bold, color: primary),
                   ),
                   const Divider(height: 36),
-                  const Text('Requisitos', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                  const Text('Requisitos',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
-                  Row(
-                    children: const [
+                  const Row(
+                    children: [
                       Icon(Icons.badge_outlined, size: 18),
                       SizedBox(width: 8),
                       Expanded(child: Text('Licencia de conducción vigente')),
                     ],
                   ),
                   const SizedBox(height: 28),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        context.read<LicenciaProvider>().reiniciar();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => ValidarLicenciaScreen(vehiculo: vehiculo)),
-                        );
-                      },
-                      icon: const Icon(Icons.key),
-                      label: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 10),
-                        child: Text('Solicitar reserva'),
+                  if (esMio)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: primary.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text(
+                        'Este vehículo es tuyo, no puedes reservarlo.',
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  else
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          context.read<LicenciaProvider>().reiniciar();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ValidarLicenciaScreen(vehiculo: vehiculo),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.key),
+                        label: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 10),
+                          child: Text('Solicitar reserva'),
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),

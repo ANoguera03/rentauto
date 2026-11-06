@@ -111,7 +111,7 @@ class _PublicarVehiculoScreenState extends State<PublicarVehiculoScreen> {
     );
   }
 
-  Future<void> _publicar() async {
+    Future<void> _publicar() async {
     if (_marcaController.text.isEmpty || _modeloController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Completa al menos marca y modelo')),
@@ -121,31 +121,42 @@ class _PublicarVehiculoScreenState extends State<PublicarVehiculoScreen> {
 
     setState(() => _guardando = true);
 
+    final sesion = context.read<VehiculoProvider>();
     final vehiculo = Vehiculo(
       marca: _marcaController.text,
       modelo: _modeloController.text,
       anio: int.tryParse(_anioController.text) ?? 2020,
       precioPorDia: double.tryParse(_precioController.text) ?? 0,
       tipo: _tipoSeleccionado,
-      ubicacion: _ubicacionController.text.isEmpty ? 'Pasto' : _ubicacionController.text,
-      fotoPath: _imagenSeleccionada?.path, // <-- esto es lo nuevo
-      dueno: context.read<VehiculoProvider>().nombreUsuario,
+      ubicacion:
+          _ubicacionController.text.isEmpty ? 'Pasto' : _ubicacionController.text,
+      fotoPath: _imagenSeleccionada?.path,
+      dueno: sesion.nombreUsuario,
+      duenoId: sesion.uid,
     );
 
-    
-
-    await context.read<VehiculoProvider>().agregarVehiculo(vehiculo);
-
-    setState(() => _guardando = false);
-    if (mounted) Navigator.pop(context);
+    try {
+      await sesion.agregarVehiculo(vehiculo);
+      if (!mounted) return;
+      Navigator.pop(context);
+    } catch (e) {
+      debugPrint('Error publicando vehículo: $e');
+      if (!mounted) return;
+      setState(() => _guardando = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo publicar. Revisa tu conexión e intenta de nuevo.'),
+        ),
+      );
+    }
   }
 
   Future<void> _seleccionarImagen() async {
   final picker = ImagePicker();
   final XFile? imagen = await picker.pickImage(
     source: ImageSource.gallery,
-    maxWidth: 1024,
-    imageQuality: 80,
+    maxWidth: 800,
+    imageQuality: 60,
   );
   if (imagen != null) {
     setState(() => _imagenSeleccionada = File(imagen.path));

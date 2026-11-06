@@ -136,6 +136,7 @@ class DatabaseService implements DataRepository {
     return maps.map((m) => Reserva.fromMap(m)).toList();
   }
 
+  
   @override
   Future<bool> crearReservaSiDisponible(Reserva reserva) async {
     final db = await database;
@@ -150,16 +151,14 @@ class DatabaseService implements DataRepository {
           AND fechaInicio <= ?
           AND fechaFin >= ?
       ''', [
-        _aInt(reserva.vehiculoId),
+        reserva.vehiculoId,
         Reserva.fechaATexto(reserva.fechaFin),
         Reserva.fechaATexto(reserva.fechaInicio),
       ]);
 
       if ((Sqflite.firstIntValue(resultado) ?? 0) > 0) return false;
 
-      final datos = reserva.toMap()
-        ..remove('id')
-        ..['vehiculoId'] = _aInt(reserva.vehiculoId);
+      final datos = reserva.toMap()..remove('id');
       await txn.insert('reservas', datos);
       return true;
     });
