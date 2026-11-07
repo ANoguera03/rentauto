@@ -2,17 +2,16 @@ import '../models/vehiculo.dart';
 import '../models/reserva.dart';
 
 /// Contrato de acceso a los datos compartidos (vehículos y reservas).
-/// Hoy lo implementa SQLite; luego lo implementará Firestore.
 abstract class DataRepository {
   Future<List<Vehiculo>> obtenerVehiculos();
   Future<void> insertarVehiculo(Vehiculo vehiculo);
   Future<void> actualizarVehiculo(Vehiculo vehiculo);
   Future<void> eliminarVehiculo(String id);
 
-  Future<List<Reserva>> obtenerReservas();
+  /// Reservas en las que participa el usuario, como cliente o como dueño.
+  Future<List<Reserva>> obtenerReservas(String usuarioId);
 
-  /// Crea la reserva solo si no se cruza con otra del mismo vehículo.
-  /// La comprobación y la inserción ocurren juntas (de forma atómica).
+  /// Crea la reserva solo si ninguno de sus días está ocupado.
   /// Devuelve false si hay cruce de fechas.
   Future<bool> crearReservaSiDisponible(Reserva reserva);
 

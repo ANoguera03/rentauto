@@ -35,10 +35,11 @@ class _PerfilScreenState extends State<PerfilScreen> {
     final primary = Theme.of(context).colorScheme.primary;
 
     final nombre = vehiculos.nombreUsuario;
-    final hechas = reservas.reservas.where((r) => r.cliente == nombre).length;
-    final recibidas = reservas.reservas.where((r) => r.dueno == nombre).length;
-    final promedio = reservas.promedioRecibido(nombre);
-    final opiniones = reservas.calificacionesRecibidas(nombre);
+    final uid = vehiculos.uid;
+    final hechas = reservas.reservas.where((r) => r.clienteId == uid).length;
+    final recibidas = reservas.reservas.where((r) => r.duenoId == uid).length;
+    final promedio = reservas.promedioRecibido(uid);
+    final opiniones = reservas.calificacionesRecibidas(uid);
 
     return Scaffold(
             appBar: AppBar(

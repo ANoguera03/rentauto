@@ -6,26 +6,26 @@ import '../models/reserva.dart';
 import '../models/vehiculo.dart';
 import 'data_repository.dart';
 
-/// Vehículos en Firestore. Las reservas se delegan temporalmente a SQLite
-/// (se migran en la siguiente sesión).
 class FirestoreRepository implements DataRepository {
-  final DataRepository _local;
-  FirestoreRepository(this._local);
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  final CollectionReference<Map<String, dynamic>> _vehiculos =
-      FirebaseFirestore.instance.collection('vehiculos');
+  late final CollectionReference<Map<String, dynamic>> _vehiculos =
+      _db.collection('vehiculos');
+  late final CollectionReference<Map<String, dynamic>> _reservas =
+      _db.collection('reservas');
+  late final CollectionReference<Map<String, dynamic>> _ocupacion =
+      _db.collection('ocupacion');
 
-  // Límite de la foto: un documento de Firestore admite máximo 1 MiB
+  static const Duration _espera = Duration(seconds: 15);
+
+  // Un documento de Firestore admite máximo 1 MiB
   static const int _maxBytesFoto = 700 * 1024;
 
-  // ---------- VEHÍCULOS (nube) ----------
+  // ---------- VEHÍCULOS ----------
   @override
   Future<List<Vehiculo>> obtenerVehiculos() async {
-    final snap = await _vehiculos
-        .orderBy('creado', descending: true)
-        .get()
-        .timeout(const Duration(seconds: 15));
-
+    final snap =
+        await _vehiculos.orderBy('creado', descending: true).get().timeout(_espera);
     return snap.docs
         .map((d) => Vehiculo.fromFirestore(d.id, d.data()))
         .toList();
@@ -53,7 +53,7 @@ class FirestoreRepository implements DataRepository {
     datos['fotoBase64'] = foto;
     datos['creado'] = FieldValue.serverTimestamp();
 
-    await _vehiculos.add(datos).timeout(const Duration(seconds: 15));
+    await _vehiculos.add(datos).timeout(_espera);
   }
 
   @override
@@ -61,27 +61,109 @@ class FirestoreRepository implements DataRepository {
     await _vehiculos
         .doc(vehiculo.id)
         .update(vehiculo.toFirestore())
-        .timeout(const Duration(seconds: 15));
+        .timeout(_espera);
   }
 
   @override
   Future<void> eliminarVehiculo(String id) async {
-    await _vehiculos.doc(id).delete().timeout(const Duration(seconds: 15));
+    await _vehiculos.doc(id).delete().timeout(_espera);
   }
 
-  // ---------- RESERVAS (por ahora locales) ----------
+  // ---------- RESERVAS ----------
   @override
-  Future<List<Reserva>> obtenerReservas() => _local.obtenerReservas();
+  Future<List<Reserva>> obtenerReservas(String usuarioId) async {
+    // Dos consultas (como cliente y como dueño). Las reglas exigen que cada
+    // consulta filtre por el usuario, así que no se pide "todo" y se filtra después.
+    final resultados = await Future.wait([
+      _reservas.where('clienteId', isEqualTo: usuarioId).get().timeout(_espera),
+      _reservas.where('duenoId', isEqualTo: usuarioId).get().timeout(_espera),
+    ]);
+
+    final porId = <String, Reserva>{};
+    for (final snap in resultados) {
+      for (final d in snap.docs) {
+        porId[d.id] = Reserva.fromFirestore(d.id, d.data());
+      }
+    }
+
+    final lista = porId.values.toList()
+      ..sort((a, b) => b.fechaInicio.compareTo(a.fechaInicio));
+    return lista;
+  }
 
   @override
-  Future<bool> crearReservaSiDisponible(Reserva reserva) =>
-      _local.crearReservaSiDisponible(reserva);
+  Future<bool> crearReservaSiDisponible(Reserva reserva) async {
+    // Un documento por cada día de la reserva
+    final dias = <DateTime>[];
+    var dia = reserva.fechaInicio;
+    while (!dia.isAfter(reserva.fechaFin)) {
+      dias.add(dia);
+      dia = DateTime(dia.year, dia.month, dia.day + 1);
+    }
+
+    final refsDias = dias
+        .map((d) => _ocupacion
+            .doc('${reserva.vehiculoId}_${Reserva.fechaATexto(d)}'))
+        .toList();
+    final refReserva = _reservas.doc();
+
+    // La transacción es atómica: o se reservan todos los días y se crea la
+    // reserva, o no se hace nada. Si dos usuarios compiten por el mismo día,
+    // solo uno lo consigue.
+    return await _db.runTransaction<bool>((tx) async {
+      for (final ref in refsDias) {
+        final snap = await tx.get(ref);
+        if (snap.exists) return false;
+      }
+
+      for (final ref in refsDias) {
+        tx.set(ref, {
+          'vehiculoId': reserva.vehiculoId,
+          'reservaId': refReserva.id,
+          'clienteId': reserva.clienteId,
+        });
+      }
+
+      final datos = reserva.toFirestore();
+      datos['creado'] = FieldValue.serverTimestamp();
+      tx.set(refReserva, datos);
+      return true;
+    }).timeout(const Duration(seconds: 20));
+  }
 
   @override
-  Future<void> actualizarEstadoReserva(String id, String estado) =>
-      _local.actualizarEstadoReserva(id, estado);
+  Future<void> actualizarEstadoReserva(String id, String estado) async {
+    await _reservas.doc(id).update({'estado': estado}).timeout(_espera);
+
+    // Si la reserva ya no ocupa el vehículo, se liberan sus días
+    if (estado == 'rechazada' || estado == 'finalizada') {
+      await _liberarDias(id);
+    }
+  }
+
+  Future<void> _liberarDias(String reservaId) async {
+    try {
+      final snap = await _ocupacion
+          .where('reservaId', isEqualTo: reservaId)
+          .get()
+          .timeout(_espera);
+
+      final batch = _db.batch();
+      for (final d in snap.docs) {
+        batch.delete(d.reference);
+      }
+      await batch.commit().timeout(_espera);
+    } catch (e) {
+      debugPrint('No se pudieron liberar los días de la reserva: $e');
+    }
+  }
 
   @override
-  Future<void> calificarReserva(String id, int estrellas, String comentario) =>
-      _local.calificarReserva(id, estrellas, comentario);
+  Future<void> calificarReserva(
+      String id, int estrellas, String comentario) async {
+    await _reservas.doc(id).update({
+      'calificacion': estrellas,
+      'comentario': comentario,
+    }).timeout(_espera);
+  }
 }

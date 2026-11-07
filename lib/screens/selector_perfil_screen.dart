@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/licencia_provider.dart';
 import '../providers/vehiculo_provider.dart';
 import 'buscar_vehiculos_screen.dart';
+import '../providers/reserva_provider.dart';
 
 class SelectorPerfilScreen extends StatelessWidget {
   final User usuario;
@@ -22,6 +23,7 @@ class SelectorPerfilScreen extends StatelessWidget {
 
     // La licencia guardada se asocia al id de la cuenta, no al nombre
     context.read<LicenciaProvider>().cambiarUsuario(usuario.uid);
+    context.read<ReservaProvider>().cambiarUsuario(usuario.uid);
 
     Navigator.pushReplacement(
       context,

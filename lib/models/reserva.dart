@@ -2,8 +2,10 @@ class Reserva {
   final String? id;
   final String vehiculoId;
   final String vehiculoNombre;
-  final String cliente;
-  final String dueno;
+  final String cliente; // nombre, para mostrar
+  final String clienteId; // uid de la cuenta
+  final String dueno; // nombre, para mostrar
+  final String duenoId; // uid de la cuenta
   final DateTime fechaInicio;
   final DateTime fechaFin;
   final double total;
@@ -16,7 +18,9 @@ class Reserva {
     required this.vehiculoId,
     required this.vehiculoNombre,
     required this.cliente,
+    required this.clienteId,
     required this.dueno,
+    required this.duenoId,
     required this.fechaInicio,
     required this.fechaFin,
     required this.total,
@@ -30,13 +34,14 @@ class Reserva {
 
   int get dias => fechaFin.difference(fechaInicio).inDays + 1;
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toFirestore() {
     return {
-      'id': id,
       'vehiculoId': vehiculoId,
       'vehiculoNombre': vehiculoNombre,
       'cliente': cliente,
+      'clienteId': clienteId,
       'dueno': dueno,
+      'duenoId': duenoId,
       'fechaInicio': fechaATexto(fechaInicio),
       'fechaFin': fechaATexto(fechaFin),
       'total': total,
@@ -46,19 +51,21 @@ class Reserva {
     };
   }
 
-  factory Reserva.fromMap(Map<String, dynamic> map) {
+  factory Reserva.fromFirestore(String id, Map<String, dynamic> d) {
     return Reserva(
-      id: map['id']?.toString(),
-      vehiculoId: map['vehiculoId'].toString(),
-      vehiculoNombre: map['vehiculoNombre'],
-      cliente: map['cliente'],
-      dueno: map['dueno'] ?? '',
-      fechaInicio: DateTime.parse(map['fechaInicio']),
-      fechaFin: DateTime.parse(map['fechaFin']),
-      total: (map['total'] as num).toDouble(),
-      estado: map['estado'],
-      calificacion: map['calificacion'],
-      comentario: map['comentario'],
+      id: id,
+      vehiculoId: d['vehiculoId'] ?? '',
+      vehiculoNombre: d['vehiculoNombre'] ?? '',
+      cliente: d['cliente'] ?? '',
+      clienteId: d['clienteId'] ?? '',
+      dueno: d['dueno'] ?? '',
+      duenoId: d['duenoId'] ?? '',
+      fechaInicio: DateTime.parse(d['fechaInicio']),
+      fechaFin: DateTime.parse(d['fechaFin']),
+      total: (d['total'] as num?)?.toDouble() ?? 0,
+      estado: d['estado'] ?? 'solicitada',
+      calificacion: (d['calificacion'] as num?)?.toInt(),
+      comentario: d['comentario'],
     );
   }
 }

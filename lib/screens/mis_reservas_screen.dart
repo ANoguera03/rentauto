@@ -58,14 +58,24 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
   @override
   Widget build(BuildContext context) {
     final reservaProvider = context.watch<ReservaProvider>();
-    final nombre = context.watch<VehiculoProvider>().nombreUsuario;
+    final uid = context.watch<VehiculoProvider>().uid;
 
     final lista = reservaProvider.reservas
-        .where((r) => _comoDueno ? r.dueno == nombre : r.cliente == nombre)
+        .where((r) => _comoDueno ? r.duenoId == uid : r.clienteId == uid)
         .toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mis reservas'), centerTitle: true),
+        appBar: AppBar(
+        title: const Text('Mis reservas'),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            tooltip: 'Actualizar',
+            icon: const Icon(Icons.refresh),
+            onPressed: () => context.read<ReservaProvider>().cargarReservas(),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Padding(
