@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/licencia_provider.dart';
 import '../providers/vehiculo_provider.dart';
-import 'buscar_vehiculos_screen.dart';
+import 'home_shell.dart';
 import '../providers/reserva_provider.dart';
 
 class SelectorPerfilScreen extends StatelessWidget {
@@ -27,7 +27,7 @@ class SelectorPerfilScreen extends StatelessWidget {
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const BuscarVehiculosScreen()),
+      MaterialPageRoute(builder: (_) => const HomeShell()),
     );
   }
 

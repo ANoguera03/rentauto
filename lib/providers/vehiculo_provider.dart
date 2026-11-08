@@ -14,6 +14,9 @@ class VehiculoProvider extends ChangeNotifier {
 
   List<Vehiculo> get vehiculos => _vehiculos;
 
+  List<Vehiculo> get misVehiculos =>
+      _vehiculos.where((v) => v.duenoId == uid).toList();
+
   Future<void> cargarVehiculos() async {
     cargando = true;
     notifyListeners();
@@ -31,5 +34,17 @@ class VehiculoProvider extends ChangeNotifier {
   Future<void> agregarVehiculo(Vehiculo vehiculo) async {
     await _repo.insertarVehiculo(vehiculo);
     await cargarVehiculos();
+  }
+
+  // Devuelve null si salió bien, o el mensaje de error
+  Future<String?> eliminarVehiculo(String id) async {
+    try {
+      await _repo.eliminarVehiculo(id);
+      await cargarVehiculos();
+      return null;
+    } catch (e) {
+      debugPrint('Error eliminando vehículo: $e');
+      return 'No se pudo eliminar el vehículo. Intenta de nuevo.';
+    }
   }
 }

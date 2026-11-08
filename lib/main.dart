@@ -39,9 +39,10 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'RentAuto',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
+                theme: ThemeData(
           colorSchemeSeed: const Color(0xFF0E8A72),
           useMaterial3: true,
+          scaffoldBackgroundColor: const Color(0xFFF5F8F7),
         ),
                 home: const AuthGate(),
       ),
