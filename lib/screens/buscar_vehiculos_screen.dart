@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/filtros_busqueda.dart';
 import '../models/vehiculo.dart';
+import '../providers/busqueda_ia_provider.dart';
 import '../providers/vehiculo_provider.dart';
 import '../utils/formato.dart';
 import '../widgets/boton_cambiar_modo.dart';
@@ -15,12 +17,13 @@ class BuscarVehiculosScreen extends StatefulWidget {
 }
 
 class _BuscarVehiculosScreenState extends State<BuscarVehiculosScreen> {
-  static const double _precioTope = 500000; // en el tope = "sin límite"
-  static const double _precioMinimo = 30000;
+  static const double _precioTope = FiltrosBusqueda.precioTope;
+  static const double _precioMinimo = FiltrosBusqueda.precioMinimo;
 
   final _busquedaCtrl = TextEditingController();
   String _tipo = 'todos';
   double _precioMax = _precioTope;
+  String? _explicacionIA; // lo que la IA entendió de la búsqueda
 
   @override
   void initState() {
@@ -44,7 +47,28 @@ class _BuscarVehiculosScreenState extends State<BuscarVehiculosScreen> {
       _busquedaCtrl.clear();
       _tipo = 'todos';
       _precioMax = _precioTope;
+      _explicacionIA = null;
     });
+  }
+
+  void _aplicarFiltrosIA(FiltrosBusqueda f) {
+    setState(() {
+      _tipo = f.tipo;
+      _precioMax = f.precioMax ?? _precioTope;
+      _busquedaCtrl.text = f.texto;
+      _explicacionIA = f.explicacion.isEmpty ? null : f.explicacion;
+    });
+  }
+
+  void _abrirBusquedaIA() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _HojaBusquedaIA(onAplicar: _aplicarFiltrosIA),
+    );
   }
 
   List<Vehiculo> _filtrar(List<Vehiculo> todos, String uid) {
@@ -52,7 +76,7 @@ class _BuscarVehiculosScreenState extends State<BuscarVehiculosScreen> {
 
     return todos.where((v) {
       if (!v.disponible) return false;
-      if (uid.isNotEmpty && v.duenoId == uid) return false; // no mostrar los propios
+      if (uid.isNotEmpty && v.duenoId == uid) return false;
       if (_tipo != 'todos' && v.tipo != _tipo) return false;
       if (_precioMax < _precioTope && v.precioPorDia > _precioMax) return false;
       if (q.isNotEmpty) {
@@ -110,6 +134,7 @@ class _BuscarVehiculosScreenState extends State<BuscarVehiculosScreen> {
       'camioneta': 'Camionetas',
     };
     final sinLimite = _precioMax >= _precioTope;
+    final colores = Theme.of(context).colorScheme;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
@@ -118,7 +143,7 @@ class _BuscarVehiculosScreenState extends State<BuscarVehiculosScreen> {
         children: [
           TextField(
             controller: _busquedaCtrl,
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) => setState(() => _explicacionIA = null),
             decoration: InputDecoration(
               hintText: 'Buscar por marca, modelo o lugar',
               prefixIcon: const Icon(Icons.search),
@@ -126,7 +151,10 @@ class _BuscarVehiculosScreenState extends State<BuscarVehiculosScreen> {
                   ? null
                   : IconButton(
                       icon: const Icon(Icons.close),
-                      onPressed: () => setState(() => _busquedaCtrl.clear()),
+                      onPressed: () => setState(() {
+                        _busquedaCtrl.clear();
+                        _explicacionIA = null;
+                      }),
                     ),
               filled: true,
               fillColor: Colors.white,
@@ -141,20 +169,53 @@ class _BuscarVehiculosScreenState extends State<BuscarVehiculosScreen> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: tipos.entries
-                  .map(
-                    (e) => Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: ChoiceChip(
-                        label: Text(e.value),
-                        selected: _tipo == e.key,
-                        onSelected: (_) => setState(() => _tipo = e.key),
-                      ),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ActionChip(
+                    avatar: Icon(Icons.auto_awesome,
+                        size: 18, color: colores.onPrimaryContainer),
+                    label: const Text('Buscar con IA'),
+                    backgroundColor: colores.primaryContainer,
+                    onPressed: _abrirBusquedaIA,
+                  ),
+                ),
+                ...tipos.entries.map(
+                  (e) => Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: Text(e.value),
+                      selected: _tipo == e.key,
+                      onSelected: (_) => setState(() {
+                        _tipo = e.key;
+                        _explicacionIA = null;
+                      }),
                     ),
-                  )
-                  .toList(),
+                  ),
+                ),
+              ],
             ),
           ),
+          if (_explicacionIA != null)
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colores.primaryContainer.withOpacity(0.55),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.auto_awesome, size: 18, color: colores.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(_explicacionIA!,
+                        style: const TextStyle(fontSize: 13)),
+                  ),
+                ],
+              ),
+            ),
           Row(
             children: [
               Icon(Icons.payments_outlined, size: 18, color: Colors.grey[700]),
@@ -174,7 +235,10 @@ class _BuscarVehiculosScreenState extends State<BuscarVehiculosScreen> {
                   min: _precioMinimo,
                   max: _precioTope,
                   divisions: 47, // pasos de $10.000
-                  onChanged: (v) => setState(() => _precioMax = v),
+                  onChanged: (v) => setState(() {
+                    _precioMax = v;
+                    _explicacionIA = null;
+                  }),
                 ),
               ),
             ],
@@ -346,6 +410,151 @@ class _BuscarVehiculosScreenState extends State<BuscarVehiculosScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Hoja inferior donde el usuario describe lo que necesita con sus palabras
+class _HojaBusquedaIA extends StatefulWidget {
+  final void Function(FiltrosBusqueda) onAplicar;
+  const _HojaBusquedaIA({required this.onAplicar});
+
+  @override
+  State<_HojaBusquedaIA> createState() => _HojaBusquedaIAState();
+}
+
+class _HojaBusquedaIAState extends State<_HojaBusquedaIA> {
+  final _ctrl = TextEditingController();
+
+  static const _ejemplos = [
+    'Un carro económico para ir a Ipiales el fin de semana',
+    'Camioneta para un viaje en familia a la Laguna de la Cocha',
+    'Una moto barata para moverme por Pasto',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => context.read<BusquedaIAProvider>().reiniciar());
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _enviar() async {
+    final consulta = _ctrl.text.trim();
+    if (consulta.isEmpty) return;
+
+    final provider = context.read<BusquedaIAProvider>();
+    await provider.buscar(consulta);
+    if (!mounted) return;
+
+    if (provider.estado == EstadoBusquedaIA.exito && provider.filtros != null) {
+      widget.onAplicar(provider.filtros!);
+      Navigator.pop(context);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.watch<BusquedaIAProvider>();
+    final primary = Theme.of(context).colorScheme.primary;
+    final cargando = p.estado == EstadoBusquedaIA.cargando;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+          20, 18, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.auto_awesome, color: primary),
+              const SizedBox(width: 8),
+              const Text('Cuéntame qué necesitas',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text('Escríbelo con tus palabras y la IA ajusta los filtros por ti.',
+              style: TextStyle(fontSize: 12.5, color: Colors.grey[600])),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _ctrl,
+            enabled: !cargando,
+            maxLines: 2,
+            maxLength: 200,
+            textInputAction: TextInputAction.done,
+            decoration: InputDecoration(
+              hintText: 'Ej: un carro barato para ir a Túquerres',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 0,
+            children: _ejemplos
+                .map((e) => ActionChip(
+                      label: Text(e, style: const TextStyle(fontSize: 11.5)),
+                      onPressed: cargando ? null : () => setState(() => _ctrl.text = e),
+                    ))
+                .toList(),
+          ),
+          const SizedBox(height: 14),
+          if (cargando)
+            const Row(
+              children: [
+                SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                ),
+                SizedBox(width: 12),
+                Text('La IA está interpretando tu búsqueda...'),
+              ],
+            ),
+          if (p.estado == EstadoBusquedaIA.error)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.error_outline, size: 18, color: Colors.red.shade700),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(p.mensajeError,
+                        style:
+                            TextStyle(color: Colors.red.shade800, fontSize: 13)),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: cargando ? null : _enviar,
+              icon: Icon(p.estado == EstadoBusquedaIA.error
+                  ? Icons.refresh
+                  : Icons.search),
+              label: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Text(p.estado == EstadoBusquedaIA.error
+                    ? 'Reintentar'
+                    : 'Buscar'),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
