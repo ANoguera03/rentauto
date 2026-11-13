@@ -14,6 +14,8 @@ class Vehiculo {
   final String dueno; // nombre del dueño, para mostrar
   final String duenoId; // uid de la cuenta del dueño
   final String? fotoBase64; // foto comprimida guardada en Firestore
+  final String? soatVence; // aaaa-mm-dd, null si no está verificado
+  final String? tecnoVence; // aaaa-mm-dd, null si no está verificado
 
   Vehiculo({
     this.id,
@@ -28,6 +30,8 @@ class Vehiculo {
     this.dueno = '',
     this.duenoId = '',
     this.fotoBase64,
+    this.soatVence,
+    this.tecnoVence,
   });
 
   // La foto se decodifica una sola vez por vehículo
@@ -42,7 +46,13 @@ class Vehiculo {
     }
   }
 
-  // ---------- SQLite ----------
+  DateTime? get soatFecha =>
+      soatVence == null ? null : DateTime.tryParse(soatVence!);
+
+  DateTime? get tecnoFecha =>
+      tecnoVence == null ? null : DateTime.tryParse(tecnoVence!);
+
+  // ---------- SQLite (copia local, ya no se usa para vehículos) ----------
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -86,6 +96,8 @@ class Vehiculo {
       'dueno': dueno,
       'duenoId': duenoId,
       'fotoBase64': fotoBase64,
+      'soatVence': soatVence,
+      'tecnoVence': tecnoVence,
     };
   }
 
@@ -102,6 +114,8 @@ class Vehiculo {
       dueno: d['dueno'] ?? '',
       duenoId: d['duenoId'] ?? '',
       fotoBase64: d['fotoBase64'],
+      soatVence: d['soatVence'],
+      tecnoVence: d['tecnoVence'],
     );
   }
 }

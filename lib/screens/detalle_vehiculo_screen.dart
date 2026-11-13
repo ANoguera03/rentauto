@@ -5,6 +5,7 @@ import '../providers/licencia_provider.dart';
 import '../providers/vehiculo_provider.dart';
 import '../widgets/foto_vehiculo.dart';
 import 'validar_licencia_screen.dart';
+import '../widgets/documentos_vehiculo.dart';
 
 class DetalleVehiculoScreen extends StatelessWidget {
   final Vehiculo vehiculo;
@@ -69,6 +70,8 @@ class DetalleVehiculoScreen extends StatelessWidget {
                     style: TextStyle(
                         fontSize: 22, fontWeight: FontWeight.bold, color: primary),
                   ),
+                                    const SizedBox(height: 14),
+                  DocumentosVehiculo(vehiculo: vehiculo),
                   const Divider(height: 36),
                   const Text('Requisitos',
                       style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
