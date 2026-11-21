@@ -40,6 +40,7 @@ class ReservaProvider extends ChangeNotifier {
   Future<String?> crearReserva({
     required Vehiculo vehiculo,
     required String cliente,
+    required String clienteTelefono,
     required DateTime inicio,
     required DateTime fin,
   }) async {
@@ -58,6 +59,8 @@ class ReservaProvider extends ChangeNotifier {
       clienteId: usuarioId,
       dueno: vehiculo.dueno,
       duenoId: vehiculo.duenoId,
+      clienteTelefono: clienteTelefono,
+      duenoTelefono: vehiculo.telefono,
       fechaInicio: ini,
       fechaFin: f,
       total: dias * vehiculo.precioPorDia,

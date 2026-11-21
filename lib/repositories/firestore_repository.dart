@@ -56,12 +56,29 @@ class FirestoreRepository implements DataRepository {
     await _vehiculos.add(datos).timeout(_espera);
   }
 
-  @override
+    @override
   Future<void> actualizarVehiculo(Vehiculo vehiculo) async {
-    await _vehiculos
-        .doc(vehiculo.id)
-        .update(vehiculo.toFirestore())
-        .timeout(_espera);
+    String? foto = vehiculo.fotoBase64;
+    final ruta = vehiculo.fotoPath;
+
+    // Si hay una foto nueva (ruta local), reemplaza a la guardada
+    if (ruta != null) {
+      try {
+        final bytes = await File(ruta).readAsBytes();
+        if (bytes.length <= _maxBytesFoto) {
+          foto = base64Encode(bytes);
+        } else {
+          debugPrint('Foto demasiado pesada (${bytes.length} bytes), se conserva la anterior');
+        }
+      } catch (e) {
+        debugPrint('No se pudo leer la foto: $e');
+      }
+    }
+
+    final datos = vehiculo.toFirestore();
+    datos['fotoBase64'] = foto;
+
+    await _vehiculos.doc(vehiculo.id).update(datos).timeout(_espera);
   }
 
   @override

@@ -8,6 +8,8 @@ import '../providers/publicar_ia_provider.dart';
 import '../providers/vehiculo_provider.dart';
 import '../utils/fechas.dart';
 import '../utils/formato.dart';
+import '../utils/contacto.dart';
+import '../providers/perfil_provider.dart';
 
 class PublicarVehiculoScreen extends StatefulWidget {
   const PublicarVehiculoScreen({super.key});
@@ -22,6 +24,8 @@ class _PublicarVehiculoScreenState extends State<PublicarVehiculoScreen> {
   final _anioController = TextEditingController();
   final _precioController = TextEditingController();
   final _ubicacionController = TextEditingController();
+  final _telefonoController = TextEditingController();
+
 
   String _tipoSeleccionado = 'carro';
   bool _guardando = false;
@@ -31,6 +35,8 @@ class _PublicarVehiculoScreenState extends State<PublicarVehiculoScreen> {
   @override
   void initState() {
     super.initState();
+        _telefonoController.text =
+        telefonoParaMostrar(context.read<PerfilProvider>().telefono);
     Future.microtask(() => context.read<PublicarIAProvider>().reiniciar());
   }
 
@@ -41,6 +47,7 @@ class _PublicarVehiculoScreenState extends State<PublicarVehiculoScreen> {
     _anioController.dispose();
     _precioController.dispose();
     _ubicacionController.dispose();
+    _telefonoController.dispose();
     super.dispose();
   }
 
@@ -167,6 +174,9 @@ class _PublicarVehiculoScreenState extends State<PublicarVehiculoScreen> {
     }
     final precio = double.tryParse(_precioController.text.trim());
     if (precio == null || precio <= 0) return 'Indica el precio por día.';
+    if (normalizarTelefonoCO(_telefonoController.text) == null) {
+      return 'Indica un celular de WhatsApp válido (10 dígitos).';
+    }
     if (ia.soat.cargando || ia.tecno.cargando) {
       return 'Espera a que la IA termine de leer el documento.';
     }
@@ -192,6 +202,7 @@ class _PublicarVehiculoScreenState extends State<PublicarVehiculoScreen> {
       fotoPath: _imagenSeleccionada?.path,
       dueno: sesion.nombreUsuario,
       duenoId: sesion.uid,
+      telefono: normalizarTelefonoCO(_telefonoController.text) ?? '',
       // Solo se guardan las fechas de vencimiento de los documentos válidos
       soatVence: ia.soatOk ? ia.soat.resultado!.vencimientoIso : null,
       tecnoVence: ia.tecnoOk ? ia.tecno.resultado!.vencimientoIso : null,
@@ -264,6 +275,8 @@ class _PublicarVehiculoScreenState extends State<PublicarVehiculoScreen> {
             _campo('Modelo', _modeloController),
             _campo('Año', _anioController, tipo: TextInputType.number),
             _campo('Ubicación', _ubicacionController),
+             _campo('WhatsApp de contacto (ej: 300 123 4567)',        _telefonoController,  
+                tipo: TextInputType.phone),
 
             const Text('Tipo de vehículo',
                 style: TextStyle(fontWeight: FontWeight.w600)),

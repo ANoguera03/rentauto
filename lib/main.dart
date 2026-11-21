@@ -11,6 +11,9 @@ import 'screens/auth_gate.dart';
 import 'repositories/firestore_repository.dart';
 import 'providers/busqueda_ia_provider.dart';
 import 'providers/publicar_ia_provider.dart';
+import 'providers/perfil_provider.dart';
+
+
 
 // Único lugar donde se decide qué base de datos usa la app.
 // Más adelante aquí se cambiará por la implementación de Firestore.
@@ -39,6 +42,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LicenciaProvider()),
         ChangeNotifierProvider(create: (_) => BusquedaIAProvider()),
         ChangeNotifierProvider(create: (_) => PublicarIAProvider()),
+        ChangeNotifierProvider(create: (_) => PerfilProvider()),
       ],
       child: MaterialApp(
         title: 'RentAuto',

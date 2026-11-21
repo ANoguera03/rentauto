@@ -7,6 +7,7 @@ import '../widgets/boton_cambiar_modo.dart';
 import '../widgets/foto_vehiculo.dart';
 import 'detalle_vehiculo_screen.dart';
 import 'publicar_vehiculo_screen.dart';
+import 'editar_vehiculo_screen.dart';
 
 class MisVehiculosScreen extends StatefulWidget {
   const MisVehiculosScreen({super.key});
@@ -56,6 +57,23 @@ class _MisVehiculosScreenState extends State<MisVehiculosScreen> {
 
     final error = await provider.eliminarVehiculo(v.id!);
     messenger.showSnackBar(SnackBar(content: Text(error ?? 'Vehículo eliminado')));
+  }
+
+    Future<void> _editar(Vehiculo v) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => EditarVehiculoScreen(vehiculo: v)),
+    );
+  }
+
+  Future<void> _alternarDisponibilidad(Vehiculo v) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final error =
+        await context.read<VehiculoProvider>().alternarDisponibilidad(v);
+    messenger.showSnackBar(SnackBar(
+      content: Text(error ??
+          (v.disponible ? 'Publicación pausada' : 'Publicación reactivada')),
+    ));
   }
 
   @override
@@ -161,7 +179,7 @@ class _MisVehiculosScreenState extends State<MisVehiculosScreen> {
                         fontSize: 15, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
-                  Text('${v.tipo} · ${v.anio} · ${v.ubicacion}',
+                                    Text('${v.tipo} · ${v.anio} · ${v.ubicacion}${v.disponible ? '' : ' · Pausado'}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 12, color: Colors.grey[600])),
@@ -176,10 +194,22 @@ class _MisVehiculosScreenState extends State<MisVehiculosScreen> {
                 ],
               ),
             ),
-            IconButton(
-              tooltip: 'Eliminar',
-              icon: Icon(Icons.delete_outline, color: Colors.red.shade400),
-              onPressed: () => _confirmarEliminar(v),
+                        PopupMenuButton<String>(
+              onSelected: (accion) {
+                if (accion == 'editar') _editar(v);
+                if (accion == 'pausar') _alternarDisponibilidad(v);
+                if (accion == 'eliminar') _confirmarEliminar(v);
+              },
+              itemBuilder: (_) => [
+                const PopupMenuItem(value: 'editar', child: Text('Editar')),
+                PopupMenuItem(
+                  value: 'pausar',
+                  child: Text(v.disponible
+                      ? 'Pausar publicación'
+                      : 'Reactivar publicación'),
+                ),
+                const PopupMenuItem(value: 'eliminar', child: Text('Eliminar')),
+              ],
             ),
           ],
         ),

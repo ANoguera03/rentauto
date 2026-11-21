@@ -6,6 +6,8 @@ class Reserva {
   final String clienteId; // uid de la cuenta
   final String dueno; // nombre, para mostrar
   final String duenoId; // uid de la cuenta
+  final String clienteTelefono;
+  final String duenoTelefono;
   final DateTime fechaInicio;
   final DateTime fechaFin;
   final double total;
@@ -27,6 +29,8 @@ class Reserva {
     this.estado = 'solicitada',
     this.calificacion,
     this.comentario,
+    this.clienteTelefono = '',
+    this.duenoTelefono = '',
   });
 
   static String fechaATexto(DateTime d) =>
@@ -42,6 +46,8 @@ class Reserva {
       'clienteId': clienteId,
       'dueno': dueno,
       'duenoId': duenoId,
+      'clienteTelefono': clienteTelefono,
+      'duenoTelefono': duenoTelefono,
       'fechaInicio': fechaATexto(fechaInicio),
       'fechaFin': fechaATexto(fechaFin),
       'total': total,
@@ -60,12 +66,15 @@ class Reserva {
       clienteId: d['clienteId'] ?? '',
       dueno: d['dueno'] ?? '',
       duenoId: d['duenoId'] ?? '',
+      clienteTelefono: d['clienteTelefono'] ?? '',
+      duenoTelefono: d['duenoTelefono'] ?? '',
       fechaInicio: DateTime.parse(d['fechaInicio']),
       fechaFin: DateTime.parse(d['fechaFin']),
       total: (d['total'] as num?)?.toDouble() ?? 0,
       estado: d['estado'] ?? 'solicitada',
       calificacion: (d['calificacion'] as num?)?.toInt(),
       comentario: d['comentario'],
+      
     );
   }
 }

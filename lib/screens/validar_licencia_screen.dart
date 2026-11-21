@@ -8,8 +8,8 @@ import '../providers/licencia_provider.dart';
 import 'reservar_screen.dart';
 
 class ValidarLicenciaScreen extends StatelessWidget {
-  final Vehiculo vehiculo;
-  const ValidarLicenciaScreen({super.key, required this.vehiculo});
+  final Vehiculo? vehiculo; // null cuando se abre desde el perfil
+  const ValidarLicenciaScreen({super.key, this.vehiculo});
 
   Future<void> _elegir(BuildContext context, ImageSource fuente) async {
     final picked = await ImagePicker().pickImage(
@@ -26,6 +26,7 @@ class ValidarLicenciaScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.watch<LicenciaProvider>();
     final primary = Theme.of(context).colorScheme.primary;
+    final usandoGuardada = p.imagen == null && p.resultado != null;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Validar licencia')),
@@ -38,26 +39,28 @@ class ValidarLicenciaScreen extends StatelessWidget {
               'Sube una foto clara del reverso de tu licencia, donde aparece la tabla "Categorías autorizadas".',
               style: TextStyle(color: Colors.grey[700]),
             ),
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: primary.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, size: 18, color: primary),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Para este vehículo (${vehiculo.tipo}) se requiere categoría ${ResultadoLicencia.requisitoTexto(vehiculo.tipo)}.',
-                      style: const TextStyle(fontSize: 12.5),
+            if (vehiculo != null) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: primary.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 18, color: primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Para este vehículo (${vehiculo!.tipo}) se requiere categoría ${ResultadoLicencia.requisitoTexto(vehiculo!.tipo)}.',
+                        style: const TextStyle(fontSize: 12.5),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+            ],
             const SizedBox(height: 16),
 
             Container(
@@ -72,10 +75,21 @@ class ValidarLicenciaScreen extends StatelessWidget {
                   ? Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.badge_outlined, size: 44, color: primary),
+                        Icon(
+                          usandoGuardada
+                              ? Icons.verified_outlined
+                              : Icons.badge_outlined,
+                          size: 44,
+                          color: primary,
+                        ),
                         const SizedBox(height: 8),
-                        Text('Aún no has subido tu licencia',
-                            style: TextStyle(color: Colors.grey[600])),
+                        Text(
+                          usandoGuardada
+                              ? 'Usando la licencia que ya validaste.\nSube otra foto si quieres actualizarla.'
+                              : 'Aún no has subido tu licencia',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
                       ],
                     )
                   : ClipRRect(
@@ -197,15 +211,30 @@ class ValidarLicenciaScreen extends StatelessWidget {
           );
         }
 
-        final evaluacion = r.evaluarPara(vehiculo.tipo);
-        final aprobada = evaluacion.aprobada;
+        final v = vehiculo;
+        final bool positivo;
+        final String mensaje;
+
+        if (v == null) {
+          // Modo perfil: solo se confirma que quedó guardada
+          positivo = r.categorias.any((c) => c.vigente);
+          mensaje = positivo
+              ? 'Licencia guardada en tu perfil.'
+              : 'Licencia guardada, pero ninguna categoría está vigente.';
+        } else {
+          // Modo reserva: se evalúa contra el tipo del vehículo
+          final evaluacion = r.evaluarPara(v.tipo);
+          positivo = evaluacion.aprobada;
+          mensaje = evaluacion.mensaje;
+        }
+
         final colorVeredicto =
-            aprobada ? Colors.green.shade800 : Colors.red.shade800;
+            positivo ? Colors.green.shade800 : Colors.red.shade800;
 
         return Column(
           children: [
             _tarjeta(
-              color: aprobada ? Colors.green.shade50 : Colors.red.shade50,
+              color: positivo ? Colors.green.shade50 : Colors.red.shade50,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -228,12 +257,12 @@ class ValidarLicenciaScreen extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(aprobada ? Icons.check_circle : Icons.cancel,
+                      Icon(positivo ? Icons.check_circle : Icons.cancel,
                           color: colorVeredicto, size: 20),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          evaluacion.mensaje,
+                          mensaje,
                           style: TextStyle(
                               fontWeight: FontWeight.w600, color: colorVeredicto),
                         ),
@@ -247,17 +276,19 @@ class ValidarLicenciaScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: aprobada
-                    ? () => Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ReservarScreen(vehiculo: vehiculo),
-                          ),
-                        )
-                    : null,
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Text('Continuar con la reserva'),
+                onPressed: v == null
+                    ? () => Navigator.pop(context)
+                    : (positivo
+                        ? () => Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ReservarScreen(vehiculo: v),
+                              ),
+                            )
+                        : null),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(v == null ? 'Listo' : 'Continuar con la reserva'),
                 ),
               ),
             ),

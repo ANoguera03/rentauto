@@ -17,6 +17,11 @@ class VehiculoProvider extends ChangeNotifier {
   List<Vehiculo> get misVehiculos =>
       _vehiculos.where((v) => v.duenoId == uid).toList();
 
+  void actualizarNombre(String nombre) {
+    nombreUsuario = nombre;
+    notifyListeners();
+  }
+
   Future<void> cargarVehiculos() async {
     cargando = true;
     notifyListeners();
@@ -37,6 +42,20 @@ class VehiculoProvider extends ChangeNotifier {
   }
 
   // Devuelve null si salió bien, o el mensaje de error
+  Future<String?> actualizarVehiculo(Vehiculo vehiculo) async {
+    try {
+      await _repo.actualizarVehiculo(vehiculo);
+      await cargarVehiculos();
+      return null;
+    } catch (e) {
+      debugPrint('Error actualizando vehículo: $e');
+      return 'No se pudo guardar. Revisa tu conexión e intenta de nuevo.';
+    }
+  }
+
+  Future<String?> alternarDisponibilidad(Vehiculo vehiculo) =>
+      actualizarVehiculo(vehiculo.copyWith(disponible: !vehiculo.disponible));
+
   Future<String?> eliminarVehiculo(String id) async {
     try {
       await _repo.eliminarVehiculo(id);

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/reserva.dart';
 import '../providers/reserva_provider.dart';
 import '../providers/vehiculo_provider.dart';
+import '../utils/contacto.dart';
 
 class MisReservasScreen extends StatefulWidget {
   const MisReservasScreen({super.key});
@@ -185,6 +186,7 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.primary)),
+                            if (r.estado == 'aceptada' || r.estado == 'en_curso') _botonContacto(r),
                     if (r.calificacion != null) _estrellasYComentario(r),
           if (!_comoDueno && r.estado == 'finalizada' && r.calificacion == null)
             _botonUnico('Calificar experiencia', () => _calificar(context, r)),
@@ -318,6 +320,41 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
         ),
       ),
     );
+  }
+    // El contacto se habilita cuando la reserva ya fue aceptada
+  Widget _botonContacto(Reserva r) {
+    final numero = _comoDueno ? r.clienteTelefono : r.duenoTelefono;
+    final nombre = _comoDueno ? r.cliente : r.dueno;
+    if (numero.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: () => _contactar(r, numero, nombre),
+          icon: const Icon(Icons.chat_outlined),
+          label: Text('Escribir a ${nombre.isEmpty ? "contacto" : nombre} por WhatsApp'),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _contactar(Reserva r, String numero, String nombre) async {
+    final desde = _formato.format(r.fechaInicio);
+    final hasta = _formato.format(r.fechaFin);
+
+    final mensaje = _comoDueno
+        ? 'Hola $nombre, soy el dueño de ${r.vehiculoNombre}. Te escribo por tu reserva del $desde al $hasta para coordinar la entrega.'
+        : 'Hola, tengo una reserva aceptada para ${r.vehiculoNombre} del $desde al $hasta. Quiero coordinar la entrega.';
+
+    final messenger = ScaffoldMessenger.of(context);
+    final abierto = await abrirWhatsApp(numero, mensaje);
+    if (!abierto) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('No se pudo abrir WhatsApp en este dispositivo.')),
+      );
+    }
   }
 
   Widget _botonUnico(String texto, VoidCallback onPressed) {

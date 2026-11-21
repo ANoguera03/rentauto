@@ -16,6 +16,7 @@ class Vehiculo {
   final String? fotoBase64; // foto comprimida guardada en Firestore
   final String? soatVence; // aaaa-mm-dd, null si no está verificado
   final String? tecnoVence; // aaaa-mm-dd, null si no está verificado
+  final String telefono; // WhatsApp del dueño (57 + 10 dígitos)
 
   Vehiculo({
     this.id,
@@ -32,6 +33,7 @@ class Vehiculo {
     this.fotoBase64,
     this.soatVence,
     this.tecnoVence,
+    this.telefono = '',
   });
 
   // La foto se decodifica una sola vez por vehículo
@@ -51,6 +53,39 @@ class Vehiculo {
 
   DateTime? get tecnoFecha =>
       tecnoVence == null ? null : DateTime.tryParse(tecnoVence!);
+
+    Vehiculo copyWith({
+    String? marca,
+    String? modelo,
+    int? anio,
+    double? precioPorDia,
+    String? tipo,
+    String? ubicacion,
+    String? fotoPath,
+    bool? disponible,
+    String? fotoBase64,
+    String? soatVence,
+    String? tecnoVence,
+    String? telefono,
+  }) {
+    return Vehiculo(
+      id: id,
+      marca: marca ?? this.marca,
+      modelo: modelo ?? this.modelo,
+      anio: anio ?? this.anio,
+      precioPorDia: precioPorDia ?? this.precioPorDia,
+      tipo: tipo ?? this.tipo,
+      ubicacion: ubicacion ?? this.ubicacion,
+      fotoPath: fotoPath ?? this.fotoPath,
+      disponible: disponible ?? this.disponible,
+      dueno: dueno,
+      duenoId: duenoId,
+      fotoBase64: fotoBase64 ?? this.fotoBase64,
+      soatVence: soatVence ?? this.soatVence,
+      tecnoVence: tecnoVence ?? this.tecnoVence,
+      telefono: telefono ?? this.telefono,
+    );
+  }    
 
   // ---------- SQLite (copia local, ya no se usa para vehículos) ----------
   Map<String, dynamic> toMap() {
@@ -98,6 +133,7 @@ class Vehiculo {
       'fotoBase64': fotoBase64,
       'soatVence': soatVence,
       'tecnoVence': tecnoVence,
+       'telefono': telefono,
     };
   }
 
@@ -116,6 +152,7 @@ class Vehiculo {
       fotoBase64: d['fotoBase64'],
       soatVence: d['soatVence'],
       tecnoVence: d['tecnoVence'],
+      telefono: d['telefono'] ?? '',
     );
   }
 }
